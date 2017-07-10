@@ -67,7 +67,9 @@ public class Executor<T> implements Runnable {
         isCancel = true;
         observer = null;
         if (subscribeScheduler == Schedulers.THREAD) {
-            thread.interrupt();
+            if (thread != null) {
+                thread.interrupt();
+            }
         }
     }
 
