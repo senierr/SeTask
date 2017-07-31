@@ -14,7 +14,7 @@ maven { url 'https://jitpack.io' }
 ### 2. 添加依赖
 
 ```java
-compile 'com.github.senierr:SeTask:1.0.1'
+compile 'com.github.senierr:SeTask:1.0.2'
 ```
 
 ### 普通订阅
@@ -29,8 +29,6 @@ Observable observable = Observable.create(new ObservableOnSubscribe<String>() {
         emitter.onError(new Exception("Error"));    // 触发异常回调，并终止订阅
     }
 })
-        .subscribeOn(Schedulers.THREAD)     // 订阅事件线程，默认异步线程
-        .observerOn(Schedulers.MAIN)        // 观察者回调线程，默认UI主线程
         .bindToObservatory(observatory)     // 绑定至观察站
         .subscribe(new Observer<String>() {
             @Override
@@ -53,7 +51,7 @@ Observable observable = Observable.create(new ObservableOnSubscribe<String>() {
 ### 计时订阅
 
 ```java
-Observable.timer(delayMillis, periodMillis)
+Observable.interval(delay, period, timeUnit)
         .bindToObservatory(observatory)
         .subscribe(new Observer<Long>() {
             @Override
@@ -66,7 +64,7 @@ Observable.timer(delayMillis, periodMillis)
 ### 延迟订阅
 
 ```java
-Observable.delay(delayMillis)
+Observable.delay(delay, timeUnit)
         .bindToObservatory(observatory)
         .subscribe(new Observer<Long>() {
             @Override
