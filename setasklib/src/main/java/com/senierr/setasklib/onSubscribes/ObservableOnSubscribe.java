@@ -1,4 +1,4 @@
-package com.senierr.setasklib;
+package com.senierr.setasklib.onSubscribes;
 
 import com.senierr.setasklib.internal.Emitter;
 

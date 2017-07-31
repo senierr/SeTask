@@ -2,11 +2,13 @@ package com.senierr.setasklib;
 
 import com.senierr.setasklib.internal.Executor;
 import com.senierr.setasklib.onSubscribes.DelayOnSubscribe;
-import com.senierr.setasklib.onSubscribes.TimerOnSubscribe;
-import com.senierr.setasklib.scheduler.Schedulers;
+import com.senierr.setasklib.onSubscribes.IntervalOnSubscribe;
+import com.senierr.setasklib.onSubscribes.ObservableOnSubscribe;
+
+import java.util.concurrent.TimeUnit;
 
 /**
- * 被观察者
+ * 订阅事件
  *
  * @author zhouchunjie
  * @date 2017/6/8
@@ -33,46 +35,26 @@ public class Observable<T> {
     }
 
     /**
-     * 创建计时器执行事件
+     * 创建周期执行事件
      *
-     * @param delayMillis
-     * @param periodMillis
+     * @param delay
+     * @param period
+     * @param timeUnit
      * @return
      */
-    public static Observable<Long> timer(long delayMillis, long periodMillis) {
-        return create(new TimerOnSubscribe(delayMillis, periodMillis));
+    public static Observable<Long> interval(long delay, long period, TimeUnit timeUnit) {
+        return create(new IntervalOnSubscribe(delay, period, timeUnit));
     }
 
     /**
      * 创建延迟执行事件
      *
-     * @param delayMillis
+     * @param delay
+     * @param timeUnit
      * @return
      */
-    public static Observable<Long> delay(long delayMillis) {
-        return create(new DelayOnSubscribe(delayMillis));
-    }
-
-    /**
-     * 设置订阅事件线程
-     *
-     * @param scheduler
-     * @return
-     */
-    public final Observable<T> subscribeOn(Schedulers scheduler) {
-        executor.setSubscribeScheduler(scheduler);
-        return this;
-    }
-
-    /**
-     * 设置订阅者线程
-     *
-     * @param scheduler
-     * @return
-     */
-    public final Observable<T> observerOn(Schedulers scheduler) {
-        executor.setObserverScheduler(scheduler);
-        return this;
+    public static Observable<Long> delay(long delay, TimeUnit timeUnit) {
+        return create(new DelayOnSubscribe(delay, timeUnit));
     }
 
     /**

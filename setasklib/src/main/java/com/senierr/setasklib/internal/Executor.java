@@ -1,9 +1,10 @@
 package com.senierr.setasklib.internal;
 
 import com.senierr.setasklib.Observer;
-import com.senierr.setasklib.ObservableOnSubscribe;
+import com.senierr.setasklib.onSubscribes.DelayOnSubscribe;
+import com.senierr.setasklib.onSubscribes.IntervalOnSubscribe;
+import com.senierr.setasklib.onSubscribes.ObservableOnSubscribe;
 import com.senierr.setasklib.scheduler.SchedulerHelper;
-import com.senierr.setasklib.scheduler.Schedulers;
 
 /**
  * 执行器
@@ -16,38 +17,54 @@ public class Executor<T> implements Runnable {
 
     private volatile boolean isCancel = false;
 
-    private Thread thread;
-
-    private Schedulers subscribeScheduler = Schedulers.THREAD;
-    private Schedulers observerScheduler = Schedulers.MAIN;
     private ObservableOnSubscribe<T> observableOnSubscribe;
     private Observer<T> observer;
+
+    private Thread thread;
+    private Emitter<T> emitter;
 
     @Override
     public void run() {
         thread = Thread.currentThread();
-        Emitter<T> emitter = new Emitter<>(this);
         try {
             observableOnSubscribe.subscribe(emitter);
-            emitter.onComplete();
+
+            boolean isInterval = observableOnSubscribe instanceof IntervalOnSubscribe;
+            if (!isInterval) {
+                emitter.onComplete();
+            }
         } catch (Exception e) {
             emitter.onError(e);
         }
     }
 
     /**
-     * 开始订阅执行
+     * 执行被订阅者
      */
     public void executeSubscribe() {
-        SchedulerHelper.getInstance().doOn(subscribeScheduler, this);
+        // 创建分发器
+        emitter = new Emitter<>(this);
+        // 执行任务
+        if (observableOnSubscribe instanceof DelayOnSubscribe) {
+            SchedulerHelper.getInstance().doOnScheduledScheduler(this,
+                    ((DelayOnSubscribe) observableOnSubscribe).getDelay(),
+                    ((DelayOnSubscribe) observableOnSubscribe).getTimeUnit());
+        } else if (observableOnSubscribe instanceof IntervalOnSubscribe) {
+            SchedulerHelper.getInstance().doOnScheduledScheduler(this,
+                    ((IntervalOnSubscribe) observableOnSubscribe).getDelay(),
+                    ((IntervalOnSubscribe) observableOnSubscribe).getPeriod(),
+                    ((IntervalOnSubscribe) observableOnSubscribe).getTimeUnit());
+        } else {
+            SchedulerHelper.getInstance().doOnThreadScheduler(this);
+        }
     }
 
     /**
-     * 开始订阅执行
+     * 执行执行订阅者
      */
     public void executeObserver(Runnable runnable) {
         if (!isCancel) {
-            SchedulerHelper.getInstance().doOn(observerScheduler, runnable);
+            SchedulerHelper.getInstance().doOnMainScheduler(runnable);
         }
     }
 
@@ -66,10 +83,8 @@ public class Executor<T> implements Runnable {
     public void cancel() {
         isCancel = true;
         observer = null;
-        if (subscribeScheduler == Schedulers.THREAD) {
-            if (thread != null) {
-                thread.interrupt();
-            }
+        if (thread != null) {
+            thread.interrupt();
         }
     }
 
@@ -87,21 +102,5 @@ public class Executor<T> implements Runnable {
 
     public void setObserver(Observer<T> observer) {
         this.observer = observer;
-    }
-
-    public Schedulers getSubscribeScheduler() {
-        return subscribeScheduler;
-    }
-
-    public void setSubscribeScheduler(Schedulers subscribeScheduler) {
-        this.subscribeScheduler = subscribeScheduler;
-    }
-
-    public Schedulers getObserverScheduler() {
-        return observerScheduler;
-    }
-
-    public void setObserverScheduler(Schedulers observerScheduler) {
-        this.observerScheduler = observerScheduler;
     }
 }
