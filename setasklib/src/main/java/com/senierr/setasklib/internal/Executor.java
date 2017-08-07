@@ -6,6 +6,8 @@ import com.senierr.setasklib.onSubscribes.IntervalOnSubscribe;
 import com.senierr.setasklib.onSubscribes.ObservableOnSubscribe;
 import com.senierr.setasklib.scheduler.SchedulerHelper;
 
+import java.util.concurrent.Future;
+
 /**
  * 执行器
  *
@@ -20,15 +22,14 @@ public class Executor<T> implements Runnable {
     private ObservableOnSubscribe<T> observableOnSubscribe;
     private Observer<T> observer;
 
-    private Thread thread;
     private Emitter<T> emitter;
+    private Future<?> future;
 
     @Override
     public void run() {
-        thread = Thread.currentThread();
         try {
             observableOnSubscribe.subscribe(emitter);
-
+            // 是否是周期任务
             boolean isInterval = observableOnSubscribe instanceof IntervalOnSubscribe;
             if (!isInterval) {
                 emitter.onComplete();
@@ -46,16 +47,16 @@ public class Executor<T> implements Runnable {
         emitter = new Emitter<>(this);
         // 执行任务
         if (observableOnSubscribe instanceof DelayOnSubscribe) {
-            SchedulerHelper.getInstance().doOnScheduledScheduler(this,
+            future = SchedulerHelper.getInstance().doOnScheduledScheduler(this,
                     ((DelayOnSubscribe) observableOnSubscribe).getDelay(),
                     ((DelayOnSubscribe) observableOnSubscribe).getTimeUnit());
         } else if (observableOnSubscribe instanceof IntervalOnSubscribe) {
-            SchedulerHelper.getInstance().doOnScheduledScheduler(this,
+            future = SchedulerHelper.getInstance().doOnScheduledScheduler(this,
                     ((IntervalOnSubscribe) observableOnSubscribe).getDelay(),
                     ((IntervalOnSubscribe) observableOnSubscribe).getPeriod(),
                     ((IntervalOnSubscribe) observableOnSubscribe).getTimeUnit());
         } else {
-            SchedulerHelper.getInstance().doOnThreadScheduler(this);
+            future = SchedulerHelper.getInstance().doOnThreadScheduler(this);
         }
     }
 
@@ -83,8 +84,8 @@ public class Executor<T> implements Runnable {
     public void cancel() {
         isCancel = true;
         observer = null;
-        if (thread != null) {
-            thread.interrupt();
+        if (future != null) {
+            future.cancel(true);
         }
     }
 

@@ -11,7 +11,12 @@ import com.senierr.setasklib.Observable;
 import com.senierr.setasklib.Observatory;
 import com.senierr.setasklib.onSubscribes.ObservableOnSubscribe;
 import com.senierr.setasklib.Observer;
+import com.senierr.setasklib.scheduler.SchedulerHelper;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,9 +29,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        normal();
+        normal();
 //        interval();
-        delay();
+//        delay();
     }
 
     @Override
@@ -37,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void normal() {
+        log("Observable-test");
         observable = Observable.create(new ObservableOnSubscribe<String>() {
             @Override
             public void subscribe(Emitter<String> emitter) throws Exception {
@@ -72,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void interval() {
+        log("interval-test");
         Observable.interval(1, 3, TimeUnit.SECONDS)
                 .bindToObservatory(observatory)
                 .subscribe(new Observer<Long>() {
@@ -93,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void delay() {
+        log("delay-test");
         Observable.delay(5000, TimeUnit.MILLISECONDS)
                 .bindToObservatory(observatory)
                 .subscribe(new Observer<Long>() {

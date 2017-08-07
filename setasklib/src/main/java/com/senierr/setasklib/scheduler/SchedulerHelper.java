@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -30,7 +31,7 @@ public class SchedulerHelper {
     // UI主线程
     private Handler mainScheduler;
     // 普通异步线程
-    private Executor threadScheduler;
+    private ThreadPoolExecutor threadScheduler;
     // 计划线程
     private ScheduledExecutorService scheduledScheduler;
 
@@ -72,8 +73,8 @@ public class SchedulerHelper {
      *
      * @param runnable
      */
-    public void doOnThreadScheduler(Runnable runnable) {
-        threadScheduler.execute(runnable);
+    public Future<?> doOnThreadScheduler(Runnable runnable) {
+        return threadScheduler.submit(runnable);
     }
 
     /**
@@ -83,8 +84,8 @@ public class SchedulerHelper {
      * @param delay
      * @param timeUnit
      */
-    public void doOnScheduledScheduler(Runnable runnable, long delay, TimeUnit timeUnit) {
-        scheduledScheduler.schedule(runnable, delay, timeUnit);
+    public Future<?> doOnScheduledScheduler(Runnable runnable, long delay, TimeUnit timeUnit) {
+        return scheduledScheduler.schedule(runnable, delay, timeUnit);
     }
 
     /**
@@ -95,7 +96,7 @@ public class SchedulerHelper {
      * @param period
      * @param timeUnit
      */
-    public void doOnScheduledScheduler(Runnable runnable, long delay, long period, TimeUnit timeUnit) {
-        scheduledScheduler.scheduleAtFixedRate(runnable, delay, period, timeUnit);
+    public Future<?> doOnScheduledScheduler(Runnable runnable, long delay, long period, TimeUnit timeUnit) {
+        return scheduledScheduler.scheduleAtFixedRate(runnable, delay, period, timeUnit);
     }
 }
